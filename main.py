@@ -4,18 +4,27 @@ from extractors.standard import ScrapingException, InvalidElementException
 import pandas as pd
 import streamlit as st
 import time
+import shelve
 
 def main():
     url = ""
     clicked_resgatar = False
         
     with st.container(border=True):
-        col1, col2 = st.columns([3, 1], vertical_alignment="bottom")
+        url = st.text_input("URL", key="URL")
+        
+        col1, col2, col3 = st.columns(3, vertical_alignment="bottom")
         
         with col1:
-            url = st.text_input("Page URL", "")
+            clicked_resgatar = st.button("Resgatar", use_container_width=True)
         with col2:
-            clicked_resgatar = st.button("Resgatar")
+            if st.button("Escolher URL", use_container_width=True):
+                get_url_dialog()
+        with col3:
+            if st.button("Limpar", use_container_width=True):
+                with shelve.open("data") as db:
+                    db.clear()
+                    st.rerun()
         
     page_list = BasePageList.restore(url)
     
@@ -69,7 +78,16 @@ def main():
                 to_show.append(product)
     
     for product in to_show:
-        st.write(f"Name: {product.name}, url: {product.page_url}")
+        st.write(f"Nome: {product.name}, URL: {product.page_url}")
+        
+@st.dialog("Selecione uma URL")
+def get_url_dialog():
+    with shelve.open("data") as db:
+        for url in db.keys():
+            if st.button(url, use_container_width=True):
+                st.session_state["URL"] = url
+                st.rerun()
+
 
 if __name__ == "__main__":
     main()
