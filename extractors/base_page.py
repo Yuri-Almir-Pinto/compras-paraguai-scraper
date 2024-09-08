@@ -7,22 +7,20 @@ from extractors.product_list import ProductsList
 class BasePage:
     def __init__(self, base_url: str, session: requests.Session = None):
         self.base_url = base_url
+        self.base_html = session.get(self.base_url).text if session is not None else requests.get(self.base_url).text
         
-        html = session.get(self.base_url).text if session is not None else requests.get(self.base_url).text
-        
-        self.base_html = BeautifulSoup(html, 'html.parser')
         self.product_list = self.get_product_list()
         self.last_page = self.get_last_page()
         self.all_pages_url = self.get_all_pages_urls()
         
     def get_product_list(self) -> ProductsList:
-        resultados_busca = self.base_html.select_one(".resultados-busca")
+        resultados_busca = self.get_soup().select_one(".resultados-busca")
         if resultados_busca is None: raise ScrapingException("Product div not found")
         
         return ProductsList(resultados_busca)
     
     def get_last_page(self) -> int:
-        pagination_elements = self.base_html.select(".pagination .page")
+        pagination_elements = self.get_soup().select(".pagination .page")
         if len(pagination_elements) == 0: raise ScrapingException("Pagination not found")
         
         last_page_element = pagination_elements[-1]
@@ -37,3 +35,6 @@ class BasePage:
             page_urls.append(page_url)
             
         return page_urls
+    
+    def get_soup(self) -> BeautifulSoup:
+        return BeautifulSoup(self.base_html, "html.parser")

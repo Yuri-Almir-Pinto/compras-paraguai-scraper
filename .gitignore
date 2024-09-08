@@ -1,1 +1,8 @@
 /env
+*.bak
+*.dat
+*.dir
+
+__pycache__/
+*.py[cod]
+*$py.class

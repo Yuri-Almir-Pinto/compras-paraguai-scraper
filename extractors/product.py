@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup, Tag
 
 class Product:
     def __init__(self, product_element: Tag):
-        self.product_element = product_element
+        self.inner_html = str(product_element)
         self.href = self.get_product_href()
         self.page_url = BASE_URL + self.href
         self.name = self.get_product_name()
@@ -18,13 +18,13 @@ class Product:
         return f"Product(name='{self.name}', price_reals={self.price_reals}, price_dollars={self.price_dollars}, href='{self.href}')"
     
     def get_product_name(self) -> str:
-        product_name = self.product_element.select_one(".promocao-item-nome a")
+        product_name = self.get_soup().select_one(".promocao-item-nome a")
         if product_name is None: raise ScrapingException("Product name not found")
         
         return product_name.text
     
     def get_product_price(self) -> tuple[float, float]:
-        product_price_element = self.product_element.select_one(".container-price .price-model")
+        product_price_element = self.get_soup().select_one(".container-price .price-model")
         
         if product_price_element is not None: 
             dolar_price_element = product_price_element.select_one("span")
@@ -36,7 +36,7 @@ class Product:
                 extract_price(dolar_price_element.text))
             
         else:
-            product_price_element = self.product_element.select_one(".promocao-item-preco-oferta")
+            product_price_element = self.get_soup().select_one(".promocao-item-preco-oferta")
             if product_price_element is None: raise ScrapingException(f"Product price not found on: {self.page_url}")
             dolar_price_element = product_price_element.select_one(".preco-dolar")
             reals_price_element = product_price_element.select_one(".preco-produto")
@@ -48,7 +48,7 @@ class Product:
         
         
     def get_product_href(self) -> str:
-        product_name = self.product_element.select_one(".promocao-item-nome a")
+        product_name = self.get_soup().select_one(".promocao-item-nome a")
         if product_name is None: raise ScrapingException("Product name not found")
         
         return product_name.get('href')
@@ -69,4 +69,7 @@ class Product:
             self.details[key] = value
         
         return self.details
+    
+    def get_soup(self):
+        return BeautifulSoup(self.inner_html, 'html.parser')
     
