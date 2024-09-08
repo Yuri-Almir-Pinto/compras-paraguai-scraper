@@ -37,7 +37,7 @@ class BasePageList:
             db[self.first_url] = self
     
     @classmethod
-    def restore(cls, url: str) -> 'BasePageList':
+    def restore(cls, url: str) -> 'BasePageList | None':
         with shelve.open("data") as db:
-            return db[url]
+            return db.get(url, None)
         

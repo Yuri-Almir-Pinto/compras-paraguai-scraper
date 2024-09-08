@@ -1,13 +1,40 @@
 from extractors.base_page_list import BasePageList
 from extractors.product import Product
+from extractors.standard import ScrapingException, InvalidElementException
 import pandas as pd
+import streamlit as st
+import time
 
-if __name__ == "__main__":
-    import streamlit as st
+def main():
+    url = ""
+    clicked_resgatar = False
+        
+    with st.container(border=True):
+        col1, col2 = st.columns([3, 1], vertical_alignment="bottom")
+        
+        with col1:
+            url = st.text_input("Page URL", "")
+        with col2:
+            clicked_resgatar = st.button("Resgatar")
+        
+    page_list = BasePageList.restore(url)
     
-    url = st.text_input("Page URL", "")
-    st.divider()
-    page_list = BasePageList.restore("https://www.comprasparaguai.com.br/tablet--samsung/")
+    try:
+        if clicked_resgatar:
+            with st.spinner("Resgatando dados..."):
+                page_list = BasePageList(url)
+                page_list.set_all_product_details()
+                page_list.save()
+    except ScrapingException or InvalidElementException as e:
+        st.error(f"Erro ao resgatar dados. O site providenciado não é uma página válida do Compras Paraguai. \nErro: {e}")
+        return
+    except Exception as e:
+        st.error(f"Erro inesperado: {e}")
+        return
+    
+    if page_list is None:
+        st.warning("Nenhum dado guardado encontrado para essa URL foi encontrado. Por favor, digite uma URL e clique em 'Resgatar'. ")
+        return
     
     items = {
         "key": [],
@@ -43,3 +70,6 @@ if __name__ == "__main__":
     
     for product in to_show:
         st.write(f"Name: {product.name}, url: {product.page_url}")
+
+if __name__ == "__main__":
+    main()
