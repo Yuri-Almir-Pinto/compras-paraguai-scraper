@@ -59,7 +59,7 @@ class Product:
         product_page = BeautifulSoup(html, 'html.parser')
         table_rows = product_page.select(".table-details tr")
         if table_rows is None: raise ScrapingException("Table not found")
-        self.details = {}
+        self.details: dict[str, str] = {}
         
         for row in table_rows:
             [tr_1, tr_2] = row.select("td")
